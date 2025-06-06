@@ -100,7 +100,11 @@ Follow the step-by-step process to download and successfully run this project:
     python manage.py makemigrations
     python manage.py migrate
     ```
-11. run the test for testing the project:
+12. change some settings of the postgresql by entering in the postgresql:
+    ```
+    ALTER USER your_db_user CREATEDB;
+    ```
+13. run the test for testing the project:
     ```
     python manage.py test api
     ```

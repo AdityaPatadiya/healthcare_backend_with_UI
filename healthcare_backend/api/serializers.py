@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Patient, Doctor, PatioendDoctorMapping
+from .models import Patient, Doctor, PatientDoctorMapping
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -32,7 +32,7 @@ class DoctorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MappingSerializer(serializers.ModelSerializer):
+class PatientDoctorMappingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PatioendDoctorMapping
-        fields = '__all__'
+        model = PatientDoctorMapping
+        fields = ['id', 'patient', 'doctor']

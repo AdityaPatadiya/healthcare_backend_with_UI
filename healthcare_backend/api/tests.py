@@ -1,6 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from .models import Patient, Doctor, PatientDoctorMapping
 import json
@@ -321,3 +322,31 @@ class PermissionTests(APITestCase):
 
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    
+
+class TokenRefreshTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="refreshuser",
+            password="refreshuser123"
+        )
+        self.client = APIClient()
+
+        refresh = RefreshToken.for_user(self.user)
+        self.refresh_token = str(refresh)
+        self.access_token = str(refresh.access_token)
+
+    def test_refresh_token_success(self):
+        url = reverse('token-refresh')
+        response = self.client.post(url, {'refresh': self.refresh_token}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertIn('access', data)
+
+    def test_refresh_token_invalid(self):
+        url = reverse('token-refresh')
+        response = self.client.post(url, {'refresh': 'invalidtoken'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        data = response.json()
+        self.assertIn('detail', data)

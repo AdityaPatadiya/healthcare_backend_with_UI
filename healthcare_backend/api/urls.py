@@ -5,7 +5,7 @@ from .views import (
     DoctorListCreateView, DoctorDetailView,
     PatientDoctorMappingView, PatientDoctorByPatientView, PatientDoctorMappingDeleteView
 )
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),
@@ -22,5 +22,8 @@ urlpatterns = [
     # Patient-Doctor Mapping endpoints
     path('mappings/', PatientDoctorMappingView.as_view(), name='mapping-list-create'),
     path('mappings/<int:patient_id>/', PatientDoctorByPatientView.as_view(), name='mapping-by-patient'),
-    path('mappings/delete/<int:pk>/', PatientDoctorMappingDeleteView.as_view(), name='mapping-delete')
+    path('mappings/delete/<int:pk>/', PatientDoctorMappingDeleteView.as_view(), name='mapping-delete'),
+
+    # refresh the Token
+    path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh')
 ]

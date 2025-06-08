@@ -62,7 +62,7 @@ class PatientTests(APITestCase):
         self.assertEqual(Patient.objects.count(), 1)
         self.assertEqual(Patient.objects.get().name, 'John Doe')
         self.assertEqual(Patient.objects.get().user, self.user)
-    
+
     def test_retrieve_patients(self):
         Patient.objects.create(user=self.user, **self.patient_data)
         url = reverse('patient-list-create')
@@ -146,7 +146,7 @@ class DoctorTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(content['name'], 'Dr. Smith')
-    
+
     def test_update_doctor(self):
         doctor = Doctor.objects.create(**self.doctor_data)
         url = reverse('doctor-detail', kwargs={'pk': doctor.pk})
@@ -164,7 +164,7 @@ class DoctorTests(APITestCase):
         doctor.refresh_from_db()
         self.assertEqual(doctor.specialization, 'Neurology')
         self.assertEqual(doctor.contact, '987-654-3210')
-    
+
     def test_delete_doctor(self):
         doctor = Doctor.objects.create(**self.doctor_data)
         url = reverse('doctor-detail', kwargs={'pk':doctor.pk})
@@ -172,7 +172,7 @@ class DoctorTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Doctor.objects.count(), 0)
-    
+
 
 class PatirntDoctorMappingTests(APITestCase):
     def setUp(self):
@@ -204,7 +204,7 @@ class PatirntDoctorMappingTests(APITestCase):
             contact='555-5678',
             email='williams@example.com'
         )
-    
+
     def test_create_mapping(self):
         url = reverse('mapping-list-create')
         data = {'patient': self.patient.pk, 'doctor': self.doctor1.pk}
@@ -240,7 +240,7 @@ class PatirntDoctorMappingTests(APITestCase):
         self.assertEqual(len(content), 2)
         self.assertEqual(content[0]['patient'], self.patient.pk)
         self.assertEqual(content[1]['patient'], self.patient.pk)
-    
+
     def test_delete_mapping(self):
         mapping = PatientDoctorMapping.objects.create(
             patient=self.patient,
@@ -262,15 +262,15 @@ class PatirntDoctorMappingTests(APITestCase):
         data = {'patient': self.patient.pk, 'doctor': self.doctor1.pk}
         response = self.client.post(url, data, format='json')
         content = json.loads(response.content)
-        
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('non_field_errors', content)
-    
+
 
 class PermissionTests(APITestCase):
     def setUp(self):
         self.client = APIClient()
-    
+
     def test_unauthenticated_access(self):
         user = User.objects.create_user('user1', 'pass1')
         patient = Patient.objects.create(
@@ -294,13 +294,13 @@ class PermissionTests(APITestCase):
         for url in endpoints:
             response = self.client.get(url)
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-    
-    def test_potient_ownership(self):
+
+    def test_patient_ownership(self):
         user1 = User.objects.create_user('user1', 'pass1')
         user2 = User.objects.create_user('user2', 'pass2')
 
         patient = Patient.objects.create(
-            user = user1,\
+            user = user1,
             name='User1 Patient',
             age=30,
             gender='Female',

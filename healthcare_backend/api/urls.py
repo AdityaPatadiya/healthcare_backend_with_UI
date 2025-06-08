@@ -12,8 +12,8 @@ urlpatterns = [
     path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
 
     # Patient endpoints
-    path('patient/', PatientListCreateView.as_view(), name='patient-list-create'),
-    path('patient/<int:pk>/', PatientDetailView.as_view(), name='patient-detail'),
+    path('patients/', PatientListCreateView.as_view(), name='patient-list-create'),
+    path('patients/<int:pk>/', PatientDetailView.as_view(), name='patient-detail'),
 
     # Doctors endpoints
     path('doctors/', DoctorListCreateView.as_view(), name='doctor-list-create'),

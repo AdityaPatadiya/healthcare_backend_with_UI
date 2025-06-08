@@ -40,6 +40,9 @@
 `DELETE /api/mappings/<id>/` - Remove a doctor from a patient.
 
 
+## 5. Refresh Token API
+`POST /api/token/refresh` - Assign new token to the user.
+
 
 ## How to run the project?
 Follow the step-by-step process to download and successfully run this project:

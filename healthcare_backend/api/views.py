@@ -76,7 +76,7 @@ class DoctorListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        doctor = Doctor.objects.all().order_by()
+        doctor = Doctor.objects.all()  # this is the concept of ORM.
         serializer = DoctorSerializer(doctor, many=True)
         return Response(serializer.data)
 

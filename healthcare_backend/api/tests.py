@@ -24,7 +24,7 @@ class AuthenticationTests(APITestCase):
         self.assertTrue('access' in content)
         self.assertTrue('refresh' in content)
         self.assertEqual(User.objects.count(), 1)
-    
+
     def test_suer_login(self):
         User.objects.create_user(**self.user_data)
         url = reverse('token_obtain_pair')
@@ -36,7 +36,7 @@ class AuthenticationTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue('access' in content)
-    
+
 
 class PatientTests(APITestCase):
     def setUp(self):
@@ -53,7 +53,7 @@ class PatientTests(APITestCase):
             'address': '123 Main St',
             'condition': 'Healthy'
         }
-    
+
     def test_create_patieht(self):
         url = reverse('patient-list-create')
         response = self.client.post(url, self.patient_data, format='json')
@@ -73,7 +73,7 @@ class PatientTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(content), 1)
         self.assertEqual(content[0]['name'], 'John Doe')
-    
+
     def test_retrieve_single_patient(self):
         patient = Patient.objects.create(user=self.user, **self.patient_data)
         url = reverse('patient-detail', kwargs={'pk': patient.pk})
@@ -94,7 +94,7 @@ class PatientTests(APITestCase):
         patient.refresh_from_db()
         self.assertEqual(patient.name, 'John Updated')
         self.assertEqual(patient.age, 35)
-    
+
     def test_delete_patient(self):
         patient = Patient.objects.create(user=self.user, **self.patient_data)
         url = reverse('patient-detail', kwargs={'pk': patient.pk})
@@ -102,7 +102,7 @@ class PatientTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Patient.objects.count(), 0)
-    
+
 
 class DoctorTests(APITestCase):
     def setUp(self):
@@ -119,7 +119,7 @@ class DoctorTests(APITestCase):
             'contact': '123-456-7890',
             'email': 'smith@example.com'
         }
-    
+
     def test_create_doctor(self):
         url = reverse('doctor-list-create')
         response = self.client.post(url, self.doctor_data, format='json')
@@ -128,7 +128,7 @@ class DoctorTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Doctor.objects.count(), 1)
         self.assertEqual(Doctor.objects.get().name, 'Dr. Smith')
-    
+
     def test_retrieve_doctors(self):
         Doctor.objects.create(**self.doctor_data)
         url = reverse('doctor-list-create')
@@ -138,7 +138,7 @@ class DoctorTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(content), 1)
         self.assertEqual(content[0]['name'], 'Dr. Smith')
-    
+
     def test_retrieve_single_doctor(self):
         doctor = Doctor.objects.create(**self.doctor_data)
         url = reverse('doctor-detail', kwargs={'pk': doctor.pk})

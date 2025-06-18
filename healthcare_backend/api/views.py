@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Patient, Doctor, PatientDoctorMapping
 from .serializers import PatientSerializer, RegisterSerializer, DoctorSerializer, PatientDoctorMappingSerializer
+from .tasks import send_welcome_email
 
 
 class RegisterView(APIView):
@@ -14,6 +15,7 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            send_welcome_email(user.email)
             refresh = RefreshToken.for_user(user)
             return Response({
                 'refresh': str(refresh),
@@ -96,7 +98,7 @@ class DoctorDetailView(APIView):
             return Doctor.objects.get(pk=pk)
         except Doctor.DoesNotExist:
             return None
-        
+
     def get(self, request, pk):
         doctor = self.get_object(pk)
         if not doctor:
@@ -113,7 +115,7 @@ class DoctorDetailView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
-    
+
     def delete(self, request, pk):
         doctor = self.get_object(pk)
         if not doctor:
@@ -129,7 +131,7 @@ class PatientDoctorMappingView(APIView):
         mappings = PatientDoctorMapping.objects.all()
         serializer = PatientDoctorMappingSerializer(mappings, many=True)
         return Response(serializer.data)
-    
+
     def post(self, request):
         serializer = PatientDoctorMappingSerializer(data=request.data)
         if serializer.is_valid():

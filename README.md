@@ -142,5 +142,3 @@ Follow these steps to set up and run the project:
 > While testing the endpoints, always include a trailing `/` in your URLs to avoid 301/404 issues.
 
 ---
-
-Let me know if you want me to convert this into a `README.md` file format or add more advanced sections like **API request examples**, **JWT auth guide**, or **Docker setup**.

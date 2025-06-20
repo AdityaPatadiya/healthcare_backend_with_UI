@@ -52,62 +52,25 @@ Follow the step-by-step process to download and successfully run this project:
 3. `venv\Scripts\activate`
 4. Install the required libraries
    ```
-   pip install django djangorestframework psycopg2-binary djangorestframework-simplejwt python-decouple
+   pip install -r requirements.txt
    ```
 5. Create a postgresql database.
 6. Create a user and password and start the postgresql service by the command `sudo service postgresql start`.
-7. update the settings.py with the below changes:
     ```
-    from decouple import config
-    
-    SECRET_KEY = config('SECRET_KEY')
-    
-    # SECURITY WARNING: don't run with debug turned on in production!
-    DEBUG = config('DEBUG', cast=bool)
-    
-    INSTALLED_APPS = [
-        ...
-        'rest_framework',
-        'rest_framework_simplejwt',
-        'api',
-    ]
-    
-    
-    REST_FRAMEWORK = {
-        'DEFAULT_AUTHENTICATION_CLASSES': [
-            'rest_framework_simplejwt.authentication.JWTAuthentication',
-        ],
-        'DEFAULT_PERMISSION_CLASSES': [
-            'rest_framework.permissions.IsAuthenticated',
-        ]
-    }
-    
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config('DB_HOST', default='localhost'),
-            'PORT': config('DB_PORT', default='5432'),
-        }
-    }
-    
-    ```
-8. Create a `.env` file from the `.env.example` using command: `cp .env.example .env` and update all the required value there (along with your secret key).
-9. The secret key can be generated using:
+7. The secret key can be generated using:
     ```
     python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
     ```
-10. ```
+8. Create a `.env` file from the `.env.example` using command: `cp .env.example .env` and update all the required value there (along with your secret key).
+9. ```
     python manage.py makemigrations
     python manage.py migrate
     ```
-12. change some settings of the postgresql by entering in the postgresql:
+10. change some settings of the postgresql by entering in the postgresql:
     ```
     ALTER USER your_db_user CREATEDB;
     ```
-13. run the test for testing the project:
+11. run the test for testing the project:
     ```
     python manage.py test api
     ```

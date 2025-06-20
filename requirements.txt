@@ -1,0 +1,8 @@
+django
+djangorestframework
+celery
+python-telegram-bot
+djangorestframework-simplejwt
+python-decouple
+django-celery-results
+psycopg2-binary

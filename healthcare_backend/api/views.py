@@ -1,11 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from typing import Any
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Patient, Doctor, PatientDoctorMapping
 from .serializers import PatientSerializer, RegisterSerializer, DoctorSerializer, PatientDoctorMappingSerializer
 from .tasks import send_welcome_email
+
+send_welcome_email: Any
 
 
 class RegisterView(APIView):
@@ -15,7 +18,7 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            send_welcome_email(user.email)
+            send_welcome_email.delay(user.email)
             refresh = RefreshToken.for_user(user)
             return Response({
                 'refresh': str(refresh),

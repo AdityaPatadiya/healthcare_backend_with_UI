@@ -120,8 +120,8 @@ Follow these steps to set up and run the project:
 
     [API_RegisterBot](https://t.me/API_RegisterBot)
 
-    > [!IMPORTANT]
-    > This bot is intended for testing purposes only in this project.
+> [!IMPORTANT]
+> This bot is intended for testing purposes only in this project.
 
 11. Start the three required servers:
 

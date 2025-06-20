@@ -90,7 +90,7 @@ Follow the step-by-step process to download and successfully run this project:
 12. access the telegram bot
     `https://t.me/API_RegisterBot`
 > [!IMPORTANT]
-> This bot is just a testing purpose for this project only. It won't send any notification future.
+> This bot is used for testing purpose for this project only. It won't send any notification in future.
 
 13. run three server to test the full project:
     ```

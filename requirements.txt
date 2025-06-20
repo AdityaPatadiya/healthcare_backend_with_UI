@@ -6,3 +6,6 @@ djangorestframework-simplejwt
 python-decouple
 django-celery-results
 psycopg2-binary
+redis
+python-dotenv
+asgiref

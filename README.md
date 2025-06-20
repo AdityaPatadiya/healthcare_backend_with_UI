@@ -47,35 +47,67 @@
 ## How to run the project?
 Follow the step-by-step process to download and successfully run this project:
 
-1. clone this repo with `git clone https://github.com/AdityaPatadiya/helthcare_backend.git`.
+1. clone this repo with 
+    ```
+    git clone https://github.com/AdityaPatadiya/helthcare_backend.git
+    cd healthcare_backend
+    ```
+
 2. `python -m venv venv`
+
 3. `venv\Scripts\activate`
+
 4. Install the required libraries
    ```
    pip install -r requirements.txt
    ```
+
 5. Create a postgresql database.
+
 6. Create a user and password and start the postgresql service by the command `sudo service postgresql start`.
-    ```
-7. The secret key can be generated using:
+
+7. The **django secret key** can be generated using:
     ```
     python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
     ```
-8. Create a `.env` file from the `.env.example` using command: `cp .env.example .env` and update all the required value there (along with your secret key).
-9. ```
+
+8. Create a `.env` file from the `.env.example` using command: `cp .env.example .env` and update all the required value there (along with your django secret key).
+
+9. change some settings of the postgresql by entering in the postgresql:
+    ```
+    GRANT ALL ON SCHEMA public TO <your_username>;
+    GRANT CREATE ON SCHEMA public TO <your_username>;
+    ```
+
+10. ```
     python manage.py makemigrations
     python manage.py migrate
     ```
-10. change some settings of the postgresql by entering in the postgresql:
+
+11. start the redis server
+    `redis-server`
+
+12. access the telegram bot
+    `https://t.me/API_RegisterBot`
+    > [!IMPORTANT]
+    > This bot is just for testing purpose for this project only.
+
+13. run three server to test the full project:
     ```
-    ALTER USER your_db_user CREATEDB;
-    ```
-11. run the test for testing the project:
-    ```
-    python manage.py test api
+    # run the project with the celery 
+    1.
+    python manage.py runserver
+
+    2.
+    celery -A <your_project_name> worker --loglevel=INFO
+
+    # test the telegram bot.
+    3. 
+    python3 api/telegram_bot.py
     ```
 
 This step will help to build the project and test the endpoints with the test cases.
 
 We can use postman or any api testing tool to manually testing the api endpoints.
-
+> [!WARNING]
+> while testing, don't forget to add '/' at last.

@@ -48,6 +48,12 @@
 
 ---
 
+## Imcluded Technologies
+1. Python RESTAPI
+2. postgresql
+3. redis-server
+---
+
 ## 🔧 How to Run the Project
 
 Follow these steps to set up and run the project:

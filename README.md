@@ -124,10 +124,9 @@ Follow these steps to set up and run the project:
 
 10. Access the Telegram bot:
 
-    [API_RegisterBot](https://t.me/API_RegisterBot)
-
-> [!IMPORTANT]
-> This bot is intended for testing purposes only in this project.
+    - Create a bot via [BotFather](https://t.me/BotFather)
+    - Get the Token from the BotFather
+    - update the .env file.
 
 11. Start the three required servers:
 

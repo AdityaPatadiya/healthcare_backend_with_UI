@@ -48,7 +48,7 @@
 
 ---
 
-## Imcluded Technologies
+## Included Technologies
 1. Python RESTAPI
 2. postgresql
 3. redis-server

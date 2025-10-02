@@ -1,29 +1,34 @@
 from django.urls import path
 from .views import (
-    RegisterView, 
+    RegisterView, UserProfileView, UserListView, UserDetailView,
     PatientListCreateView, PatientDetailView,
     DoctorListCreateView, DoctorDetailView,
-    PatientDoctorMappingView, PatientDoctorByPatientView, PatientDoctorMappingDeleteView
+    PatientDoctorMappingListCreateView, PatientDoctorMappingDetailView, 
+    PatientDoctorByPatientView
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    path('auth/register/', RegisterView.as_view(), name='register'),
-    path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-
+    # Authentication
+    path('v1/auth/register/', RegisterView.as_view(), name='register'),
+    path('v1/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
+    path('v1/auth/profile/', UserProfileView.as_view(), name='user-profile'),
+    
+    # User management (admin only)
+    path('v1/users/', UserListView.as_view(), name='user-list'),
+    path('v1/users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
+    
     # Patient endpoints
-    path('patients/', PatientListCreateView.as_view(), name='patient-list-create'),
-    path('patients/<int:pk>/', PatientDetailView.as_view(), name='patient-detail'),
-
-    # Doctors endpoints
-    path('doctors/', DoctorListCreateView.as_view(), name='doctor-list-create'),
-    path('doctors/<int:pk>/', DoctorDetailView.as_view(), name='doctor-detail'),
-
+    path('v1/patients/', PatientListCreateView.as_view(), name='patient-list-create'),
+    path('v1/patients/<int:pk>/', PatientDetailView.as_view(), name='patient-detail'),
+    
+    # Doctor endpoints
+    path('v1/doctors/', DoctorListCreateView.as_view(), name='doctor-list-create'),
+    path('v1/doctors/<int:pk>/', DoctorDetailView.as_view(), name='doctor-detail'),
+    
     # Patient-Doctor Mapping endpoints
-    path('mappings/', PatientDoctorMappingView.as_view(), name='mapping-list-create'),
-    path('mappings/<int:patient_id>/', PatientDoctorByPatientView.as_view(), name='mapping-by-patient'),
-    path('mappings/delete/<int:pk>/', PatientDoctorMappingDeleteView.as_view(), name='mapping-delete'),
-
-    # refresh the Token
-    path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh')
+    path('v1/mappings/', PatientDoctorMappingListCreateView.as_view(), name='mapping-list-create'),
+    path('v1/mappings/<int:pk>/', PatientDoctorMappingDetailView.as_view(), name='mapping-detail'),
+    path('v1/mappings/patient/<int:patient_id>/', PatientDoctorByPatientView.as_view(), name='mapping-by-patient'),
 ]

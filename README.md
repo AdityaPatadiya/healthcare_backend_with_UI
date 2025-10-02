@@ -107,6 +107,8 @@ Follow these steps to set up and run the project:
     ```sql
     GRANT ALL ON SCHEMA public TO <your_username>;
     GRANT CREATE ON SCHEMA public TO <your_username>;
+    GRANT ALL PRIVILEGES ON SCHEMA public TO <your_username>;
+    ALTER DATABASE <your database> OWNER TO <your_username>;
     ```
 
 8. Apply database migrations:
@@ -122,13 +124,7 @@ Follow these steps to set up and run the project:
     redis-server
     ```
 
-10. Access the Telegram bot:
-
-    - Create a bot via [BotFather](https://t.me/BotFather)
-    - Get the Token from the BotFather
-    - update the .env file.
-
-11. Start the three required servers:
+10. Start the two required servers:
 
     ```bash
     # Run the Django server
@@ -136,9 +132,6 @@ Follow these steps to set up and run the project:
 
     # Start the Celery worker
     celery -A healthcare_backend worker --loglevel=INFO
-
-    # Start the Telegram bot script
-    python api/telegram_bot.py
     ```
 
 ---

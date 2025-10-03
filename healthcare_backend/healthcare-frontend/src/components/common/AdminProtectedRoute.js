@@ -10,8 +10,17 @@ const AdminProtectedRoute = ({ children }) => {
     return <LoadingSpinner />;
   }
 
-  // Check if user is authenticated and is an admin
-  if (!user || user.profile?.role !== 'admin') {
+  // Check for admin role in multiple possible locations
+  const isAdmin = 
+    user?.profile?.role === 'admin' || 
+    user?.role === 'admin' ||
+    user?.user?.role === 'admin';
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!isAdmin) {
     return <Navigate to="/dashboard" />;
   }
 

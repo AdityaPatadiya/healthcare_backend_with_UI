@@ -65,6 +65,40 @@
   background-color: #2980b9;
 }
 
+/* Remove or comment out the admin-specific card styles */
+/*
+.admin-card {
+  border: 2px solid #9b59b6;
+  background: linear-gradient(135deg, #f9f7ff 0%, #f0ebff 100%);
+  position: relative;
+}
+
+.admin-card::before {
+  content: "ADMIN";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #9b59b6;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.admin-card h3 {
+  color: #8e44ad;
+}
+
+.admin-link {
+  background-color: #9b59b6;
+}
+
+.admin-link:hover {
+  background-color: #8e44ad;
+}
+*/
+
 .user-info {
   background: white;
   border: 1px solid #ddd;
@@ -105,19 +139,6 @@
 
 .admin-icon {
   font-size: 1.2rem;
-}
-
-.admin-card {
-  border: 2px solid #3498db;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-}
-
-.admin-link {
-  background-color: #3498db;
-}
-
-.admin-link:hover {
-  background-color: #2980b9;
 }
 
 .role-badge {

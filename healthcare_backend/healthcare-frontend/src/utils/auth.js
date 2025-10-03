@@ -1,22 +1,24 @@
-import { TOKEN_KEY, REFRESH_TOKEN_KEY } from './constants';
+// Token management functions
+export const getToken = () => localStorage.getItem('access_token');
+export const getRefreshToken = () => localStorage.getItem('refresh_token');
+export const setToken = (token) => localStorage.setItem('access_token', token);
+export const setRefreshToken = (token) => localStorage.setItem('refresh_token', token);
+export const removeToken = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+};
 
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
-export const setToken = (token) => localStorage.setItem(TOKEN_KEY, token);
-export const removeToken = () => localStorage.removeItem(TOKEN_KEY);
-
-export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
-export const setRefreshToken = (token) => localStorage.setItem(REFRESH_TOKEN_KEY, token);
-export const removeRefreshToken = () => localStorage.removeItem(REFRESH_TOKEN_KEY);
+export const removeRefreshToken = () => localStorage.removeItem('refresh_token');
 
 export const isAuthenticated = () => {
   const token = getToken();
   if (!token) return false;
-  
-  // Check if token is expired (basic check)
+
+  // Optional: Check token expiration
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.exp * 1000 > Date.now();
-  } catch {
+    return payload.exp > Date.now() / 1000;
+  } catch (error) {
     return false;
   }
 };

@@ -58,10 +58,10 @@ export default api;
 
 // Service functions for different endpoints
 export const authService = {
-  login: (credentials) => api.post('/v1/auth/login/', credentials),
-  register: (userData) => api.post('/v1/auth/register/', userData),
-  getProfile: () => api.get('/v1/auth/profile/'),
-  updateProfile: (userData) => api.put('/v1/auth/profile/', userData),
+  login: (credentials) => api.post('/auth/login/', credentials),
+  register: (userData) => api.post('/auth/register/', userData),
+  getProfile: () => api.get('/auth/profile/'),
+  updateProfile: (userData) => api.put('/auth/profile/', userData),
 };
 
 export const userService = {
@@ -79,25 +79,25 @@ export const userService = {
 };
 
 export const patientService = {
-  getAll: () => api.get('/v1/patients/'),
-  getById: (id) => api.get(`/v1/patients/${id}/`),
-  create: (data) => api.post('/v1/patients/', data),
-  update: (id, data) => api.put(`/v1/patients/${id}/`, data),
-  delete: (id) => api.delete(`/v1/patients/${id}/`),
+  getAll: () => api.get('/patients/'),
+  getById: (id) => api.get(`/patients/${id}/`),
+  create: (data) => api.post('/patients/', data),
+  update: (id, data) => api.put(`/patients/${id}/`, data),
+  delete: (id) => api.delete(`/patients/${id}/`),
 };
 
 export const doctorService = {
-  getAll: () => api.get('/v1/doctors/'),
-  getById: (id) => api.get(`/v1/doctors/${id}/`),
-  create: (data) => api.post('/v1/doctors/', data),
-  update: (id, data) => api.put(`/v1/doctors/${id}/`, data),
-  delete: (id) => api.delete(`/v1/doctors/${id}/`),
+  getAll: () => api.get('/doctors/'),
+  getById: (id) => api.get(`/doctors/${id}/`),
+  create: (data) => api.post('/doctors/', data),
+  update: (id, data) => api.put(`/doctors/${id}/`, data),
+  delete: (id) => api.delete(`/doctors/${id}/`),
 };
 
 export const mappingService = {
-  getAll: () => api.get('/v1/mappings/'),
-  getById: (id) => api.get(`/v1/mappings/${id}/`),
-  create: (data) => api.post('/v1/mappings/', data),
-  delete: (id) => api.delete(`/v1/mappings/${id}/`),
-  getByPatient: (patientId) => api.get(`/v1/mappings/patient/${patientId}/`),
+  getAll: () => api.get('/mappings/'),
+  getById: (id) => api.get(`/mappings/${id}/`),
+  create: (data) => api.post('/mappings/', data),
+  delete: (id) => api.delete(`/mappings/${id}/`),
+  getByPatient: (patientId) => api.get(`/mappings/patient/${patientId}/`),
 };

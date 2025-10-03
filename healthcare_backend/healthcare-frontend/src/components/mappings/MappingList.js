@@ -1,165 +1,262 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
-import { mappingService } from '../../services/mappingService';
-import { patientService } from '../../services/patientService';
-import { doctorService } from '../../services/doctorService';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNotification } from '../../hooks/useNotification';
-import Notification from '../common/Notification';
-import LoadingSpinner from '../common/LoadingSpinner';
-import MappingForm from './MappingForm';
+import { mappingService, patientService, doctorService } from '../../services/api';
 import './Mapping.css';
 
 const MappingList = () => {
+  const { user } = useAuth();
   const [mappings, setMappings] = useState([]);
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const { user } = useAuth();
-  const { notification, showNotification, clearNotification } = useNotification();
+  const [error, setError] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [formData, setFormData] = useState({
+    patient: '',
+    doctor: ''
+  });
 
-  const isAdmin = user?.profile?.role === 'admin';
+  const isAdmin = user?.role === 'admin';
 
-  // Fixed: useCallback to prevent infinite re-renders
-  const loadData = useCallback(async () => {
+  // Fetch all data
+  useEffect(() => {
+    fetchMappings();
+    if (isAdmin) {
+      fetchPatients();
+      fetchDoctors();
+    }
+  }, [isAdmin]);
+
+  const fetchMappings = async () => {
     try {
-      const [mappingsData, patientsData, doctorsData] = await Promise.all([
-        mappingService.getAll(),
-        patientService.getAll(),
-        doctorService.getAll()
-      ]);
-      
-      setMappings(mappingsData);
-      setPatients(patientsData);
-      setDoctors(doctorsData);
-    } catch (error) {
-      showNotification('Failed to load data', 'error');
+      setLoading(true);
+      const response = await mappingService.getAll();
+      setMappings(response.data);
+      setError('');
+    } catch (err) {
+      setError('Failed to fetch mappings');
+      console.error('Error fetching mappings:', err);
     } finally {
       setLoading(false);
     }
-  }, [showNotification]); // Added dependency
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]); // Fixed dependency
-
-  // ... rest of the component remains the same
-  const handleCreate = () => {
-    if (!isAdmin) {
-      showNotification('Only administrators can create mappings', 'error');
-      return;
-    }
-    setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!isAdmin) {
-      showNotification('Only administrators can delete mappings', 'error');
-      return;
-    }
-
-    if (window.confirm('Are you sure you want to delete this mapping?')) {
-      try {
-        await mappingService.delete(id);
-        showNotification('Mapping deleted successfully', 'success');
-        loadData();
-      } catch (error) {
-        const message = error.response?.data?.error || 'Failed to delete mapping';
-        showNotification(message, 'error');
-      }
-    }
-  };
-
-  const handleFormClose = () => {
-    setShowForm(false);
-  };
-
-  const handleFormSubmit = async (mappingData) => {
+  const fetchPatients = async () => {
     try {
-      await mappingService.create(mappingData);
-      showNotification('Mapping created successfully', 'success');
-      setShowForm(false);
-      loadData();
-    } catch (error) {
-      const message = error.response?.data || 'Operation failed';
-      showNotification(JSON.stringify(message), 'error');
+      const response = await patientService.getAll();
+      setPatients(response.data);
+    } catch (err) {
+      console.error('Error fetching patients:', err);
     }
   };
 
+  const fetchDoctors = async () => {
+    try {
+      const response = await doctorService.getAll();
+      setDoctors(response.data);
+    } catch (err) {
+      console.error('Error fetching doctors:', err);
+    }
+  };
+
+  // Handle form changes
+  const handleFormChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  // Create new mapping
+  const handleCreateMapping = async (e) => {
+    e.preventDefault();
+    try {
+      await mappingService.create(formData);
+      setShowCreateForm(false);
+      setFormData({ patient: '', doctor: '' });
+      await fetchMappings(); // Refresh the list
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to create mapping');
+      console.error('Error creating mapping:', err);
+    }
+  };
+
+  // Delete mapping
+  const handleDeleteMapping = async (mappingId) => {
+    if (!window.confirm('Are you sure you want to delete this mapping?')) {
+      return;
+    }
+    try {
+      await mappingService.delete(mappingId);
+      await fetchMappings(); // Refresh the list
+      setError('');
+    } catch (err) {
+      setError('Failed to delete mapping');
+      console.error('Error deleting mapping:', err);
+    }
+  };
+
+  // Get patient name by ID
   const getPatientName = (patientId) => {
     const patient = patients.find(p => p.id === patientId);
-    return patient ? patient.name : 'Unknown Patient';
+    if (patient && patient.user) {
+      return `${patient.user.first_name || ''} ${patient.user.last_name || ''}`.trim() || patient.user.username || `Patient ${patientId}`;
+    }
+    return `Patient ${patientId}`;
   };
 
+  // Get doctor name by ID
   const getDoctorName = (doctorId) => {
     const doctor = doctors.find(d => d.id === doctorId);
-    return doctor ? `Dr. ${doctor.name} (${doctor.specialization})` : 'Unknown Doctor';
+    return doctor ? doctor.name : `Doctor ${doctorId}`;
   };
 
-  // Filter mappings for non-admin users (only show their own patients)
-  const filteredMappings = isAdmin 
-    ? mappings 
-    : mappings.filter(mapping => {
-        const patient = patients.find(p => p.id === mapping.patient);
-        return patient && patient.user === user?.id;
-      });
-
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <div className="mapping-container">
+        <div className="loading">Loading mappings...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="mapping-container">
-      <Notification
-        message={notification.message}
-        type={notification.type}
-        onClose={clearNotification}
-      />
-
       <div className="mapping-header">
-        <h2>Patient-Doctor Mappings</h2>
+        <h1>Patient-Doctor Mappings</h1>
+        <p>Manage relationships between patients and doctors</p>
+        
         {isAdmin && (
-          <button onClick={handleCreate} className="btn-primary">
-            Add New Mapping
+          <button 
+            className="create-mapping-btn"
+            onClick={() => setShowCreateForm(!showCreateForm)}
+          >
+            {showCreateForm ? 'Cancel' : 'Create New Mapping'}
           </button>
         )}
       </div>
 
-      {showForm && (
-        <MappingForm
-          patients={patients}
-          doctors={doctors}
-          onSubmit={handleFormSubmit}
-          onClose={handleFormClose}
-        />
+      {error && (
+        <div className="error-message">
+          {error}
+        </div>
       )}
 
-      <div className="mapping-list">
-        {filteredMappings.length === 0 ? (
-          <p className="no-data">No mappings found.</p>
-        ) : (
-          filteredMappings.map(mapping => (
-            <div key={mapping.id} className="mapping-card">
-              <div className="mapping-info">
-                <h3>Patient-Doctor Relationship</h3>
-                <p><strong>Patient:</strong> {mapping.patient_name || getPatientName(mapping.patient)}</p>
-                <p><strong>Doctor:</strong> {mapping.doctor_name || getDoctorName(mapping.doctor)}</p>
-                {mapping.doctor_specialization && (
-                  <p><strong>Specialization:</strong> {mapping.doctor_specialization}</p>
-                )}
-                <p><strong>Created:</strong> {new Date(mapping.created_at).toLocaleDateString()}</p>
-              </div>
-              <div className="mapping-actions">
-                {isAdmin && (
-                  <button
-                    onClick={() => handleDelete(mapping.id)}
-                    className="btn-danger"
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
+      {/* Create Mapping Form (Admin only) */}
+      {showCreateForm && isAdmin && (
+        <div className="mapping-form">
+          <h3>Create New Mapping</h3>
+          <form onSubmit={handleCreateMapping}>
+            <div className="form-group">
+              <label>Patient:</label>
+              <select
+                name="patient"
+                value={formData.patient}
+                onChange={handleFormChange}
+                required
+              >
+                <option value="">Select Patient</option>
+                {patients.map(patient => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.user ? 
+                      `${patient.user.first_name || ''} ${patient.user.last_name || ''}`.trim() || patient.user.username 
+                      : `Patient ${patient.id}`
+                    }
+                  </option>
+                ))}
+              </select>
             </div>
-          ))
+
+            <div className="form-group">
+              <label>Doctor:</label>
+              <select
+                name="doctor"
+                value={formData.doctor}
+                onChange={handleFormChange}
+                required
+              >
+                <option value="">Select Doctor</option>
+                {doctors.map(doctor => (
+                  <option key={doctor.id} value={doctor.id}>
+                    {doctor.name} ({doctor.specialization})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-actions">
+              <button type="submit" className="submit-btn">
+                Create Mapping
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Mappings List */}
+      <div className="mappings-list">
+        <h2>Existing Mappings ({mappings.length})</h2>
+        
+        {mappings.length === 0 ? (
+          <div className="no-mappings">
+            <p>No mappings found.</p>
+            {isAdmin && (
+              <p>Click "Create New Mapping" to add the first mapping.</p>
+            )}
+          </div>
+        ) : (
+          <div className="mappings-table-container">
+            <table className="mappings-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Patient</th>
+                  <th>Doctor</th>
+                  <th>Created Date</th>
+                  {isAdmin && <th>Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {mappings.map((mapping) => (
+                  <tr key={mapping.id}>
+                    <td>{mapping.id}</td>
+                    <td>{getPatientName(mapping.patient)}</td>
+                    <td>{getDoctorName(mapping.doctor)}</td>
+                    <td>
+                      {mapping.created_at ? new Date(mapping.created_at).toLocaleDateString() : 'N/A'}
+                    </td>
+                    {isAdmin && (
+                      <td>
+                        <button
+                          className="delete-btn"
+                          onClick={() => handleDeleteMapping(mapping.id)}
+                          title="Delete mapping"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
+      </div>
+
+      {/* Information Card */}
+      <div className="mapping-info-card">
+        <h3>About Patient-Doctor Mappings</h3>
+        <div className="info-content">
+          <p>
+            <strong>For Administrators:</strong> You can create and manage relationships between patients and doctors. 
+            Each mapping represents which doctor is assigned to care for which patient.
+          </p>
+          <p>
+            <strong>For Regular Users:</strong> You can view the mappings for your own patients. 
+            This shows which doctors are assigned to care for your patients.
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { authService } from '../services/authService';
-import { isAuthenticated } from '../utils/auth';
+import { getToken, removeToken, isAuthenticated } from '../utils/auth';
 
 const AuthContext = createContext();
 
@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
       } catch (error) {
         console.error('Auth check failed:', error);
-        authService.logout();
+        removeToken();
       }
     }
     setLoading(false);

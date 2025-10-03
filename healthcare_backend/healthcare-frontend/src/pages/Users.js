@@ -109,7 +109,7 @@ const Users = () => {
       <div className="users-container">
         <div className="users-header">
           <h2>System Users ({users.length})</h2>
-          <button 
+          <button
             className="refresh-btn"
             onClick={fetchUsers}
             disabled={loading}
@@ -177,20 +177,19 @@ const Users = () => {
           )}
         </div>
 
-        {/* Current User Info Card */}
         <div className="user-info-card">
           <h3>Current User Information</h3>
           <div className="info-grid">
             <div><strong>Username:</strong> {currentUser?.username}</div>
             <div><strong>Email:</strong> {currentUser?.email}</div>
             <div>
-              <strong>Role:</strong> 
+              <strong>Role:</strong>
               <span className="role-badge admin">{currentUser?.role}</span>
             </div>
             <div>
-              <strong>Name:</strong> 
-              {currentUser?.first_name && currentUser?.last_name 
-                ? `${currentUser.first_name} ${currentUser.last_name}`
+              <strong>Name:</strong>
+              {currentUser?.first_name || currentUser?.last_name
+                ? `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim()
                 : 'Not specified'
               }
             </div>

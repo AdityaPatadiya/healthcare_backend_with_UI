@@ -4,7 +4,8 @@ from .views import (
     PatientListCreateView, PatientDetailView,
     DoctorListCreateView, DoctorDetailView,
     PatientDoctorMappingListCreateView, PatientDoctorMappingDetailView, 
-    PatientDoctorByPatientView
+    PatientDoctorByPatientView,
+    ChangePasswordView, SystemSettingsView, UserActivityView
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -14,10 +15,14 @@ urlpatterns = [
     path('v1/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('v1/auth/profile/', UserProfileView.as_view(), name='user-profile'),
+    path('v1/auth/change-password/', ChangePasswordView.as_view(), name='change-password'),
     
     # User management (admin only)
     path('v1/users/', UserListView.as_view(), name='user-list'),
     path('v1/users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
+
+    # System settings (admin only)
+    path('v1/system-settings/', SystemSettingsView.as_view(), name='system-settings'),
     
     # Patient endpoints
     path('v1/patients/', PatientListCreateView.as_view(), name='patient-list-create'),

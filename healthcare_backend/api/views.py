@@ -9,6 +9,7 @@ from .models import Patient, Doctor, PatientDoctorMapping, CustomUser
 from .serializers import PatientSerializer, RegisterSerializer, DoctorSerializer, PatientDoctorMappingSerializer, UserSerializer
 from .premissions import IsAdmin, IsOwnerOrAdmin, IsCreatorOrAdmin
 from .tasks import send_welcome_email
+from django.contrib.auth import update_session_auth_hash
 
 
 class RegisterView(APIView):
@@ -301,3 +302,105 @@ class UserDetailView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+
+        if not current_password or not new_password:
+            return Response(
+                {"error": "Current password and new password are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Check current password
+        if not user.check_password(current_password):
+            return Response(
+                {"error": "Current password is incorrect"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Set new password
+        user.set_password(new_password)
+        user.save()
+
+        # Update session auth hash to keep user logged in
+        update_session_auth_hash(request, user)
+
+        return Response(
+            {"message": "Password changed successfully"},
+            status=status.HTTP_200_OK
+        )
+
+
+class SystemSettingsView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        # Return default system settings
+        # In a real application, you'd store these in the database
+        default_settings = {
+            'auto_logout': True,
+            'session_timeout': 60,
+            'email_notifications': True,
+            'data_retention': 365,
+            'max_login_attempts': 5,
+            'password_min_length': 8
+        }
+        return Response(default_settings)
+
+    def put(self, request):
+        # Update system settings
+        # In a real application, you'd save these to the database
+        allowed_settings = [
+            'auto_logout', 'session_timeout', 'email_notifications', 
+            'data_retention', 'max_login_attempts', 'password_min_length'
+        ]
+        
+        updated_settings = {}
+        for setting in allowed_settings:
+            if setting in request.data:
+                updated_settings[setting] = request.data[setting]
+
+        # Here you would typically save to database
+        # For now, we'll just return the updated settings
+        return Response({
+            "message": "System settings updated successfully",
+            "settings": updated_settings
+        }, status=status.HTTP_200_OK)
+
+
+class UserActivityView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        # Get recent user activity
+        from django.db.models import Q
+        from datetime import datetime, timedelta
+        
+        # Get activities from last 7 days
+        week_ago = datetime.now() - timedelta(days=7)
+        
+        # You can extend this to track user activities in a separate model
+        # For now, return basic user login information
+        recent_users = CustomUser.objects.filter(
+            Q(last_login__gte=week_ago) | Q(date_joined__gte=week_ago)
+        ).order_by('-last_login', '-date_joined')[:10]
+        
+        activities = []
+        for user in recent_users:
+            activity = {
+                'user_id': user.id,
+                'username': user.username,
+                'activity': 'Logged in' if user.last_login else 'Registered',
+                'timestamp': user.last_login or user.date_joined,
+                'type': 'login' if user.last_login else 'registration'
+            }
+            activities.append(activity)
+        
+        return Response(activities, status=status.HTTP_200_OK)

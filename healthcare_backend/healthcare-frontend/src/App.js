@@ -12,6 +12,7 @@ import DoctorList from './components/doctors/DoctorList';
 import MappingList from './components/mappings/MappingList';
 import Users from './pages/Users';
 import Reports from './pages/Reports';
+import Settings from './pages/Settings'; // Add this import
 import LoadingSpinner from './components/common/LoadingSpinner';
 import './App.css';
 
@@ -74,6 +75,14 @@ const AppContent = () => {
             <Navbar />
             <Reports />
           </AdminProtectedRoute>
+        } />
+
+        {/* Settings route - accessible to all authenticated users */}
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Navbar />
+            <Settings />
+          </ProtectedRoute>
         } />
 
         {/* 404 fallback */}

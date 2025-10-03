@@ -1,16 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // Add this import
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { user } = useAuth();
 
-  // Try multiple possible locations for role and user data
   const userRole = user?.profile?.role || user?.role || user?.user?.role || 'user';
   const isAdmin = userRole === 'admin';
 
-  // Get user's display name from various possible locations
   const getUserDisplayName = () => {
     if (user?.first_name && user?.last_name) {
       return `${user.first_name} ${user.last_name}`;
@@ -25,7 +23,7 @@ const Dashboard = () => {
       return user.username;
     }
     if (user?.email) {
-      return user.email.split('@')[0]; // Return part before @ in email
+      return user.email.split('@')[0];
     }
     return 'User';
   };
@@ -39,7 +37,7 @@ const Dashboard = () => {
     <div className="dashboard">
       <div className="dashboard-header">
         <h1>Healthcare Dashboard</h1>
-        <p>Welcome back, {fullName}!</p>
+        <p className="welcome-message">Welcome back, {fullName}!</p>
         {isAdmin && (
           <div className="admin-welcome">
             <span className="admin-icon">⚡</span>
@@ -48,54 +46,81 @@ const Dashboard = () => {
         )}
       </div>
 
-      <div className="dashboard-stats">
-        <div className="stat-card">
-          <h3>Patients</h3>
-          <p>Manage patient records and information</p>
-          <Link to="/patients" className="stat-link">View Patients</Link> {/* Changed to Link */}
+      <div className="dashboard-grid">
+        <div className="dashboard-card">
+          <div className="card-content">
+            <h3 className="card-title">Patients</h3>
+            <p className="card-description">Manage patient records and information</p>
+          </div>
+          <Link to="/patients" className="card-button">View Patients</Link>
         </div>
 
-        <div className="stat-card">
-          <h3>Doctors</h3>
-          <p>Manage doctor profiles and information</p>
-          <Link to="/doctors" className="stat-link">View Doctors</Link> {/* Changed to Link */}
+        <div className="dashboard-card">
+          <div className="card-content">
+            <h3 className="card-title">Doctors</h3>
+            <p className="card-description">Manage doctor profiles and information</p>
+          </div>
+          <Link to="/doctors" className="card-button">View Doctors</Link>
         </div>
 
-        <div className="stat-card">
-          <h3>Mappings</h3>
-          <p>Manage patient-doctor relationships</p>
-          <Link to="/mappings" className="stat-link">View Mappings</Link> {/* Changed to Link */}
+        <div className="dashboard-card">
+          <div className="card-content">
+            <h3 className="card-title">Mappings</h3>
+            <p className="card-description">Manage patient-doctor relationships</p>
+          </div>
+          <Link to="/mappings" className="card-button">View Mappings</Link>
         </div>
 
-        {/* Admin-only stats */}
+        {/* Admin-only cards */}
         {isAdmin && (
           <>
-            <div className="stat-card"> {/* Remove admin-card class */}
-              <h3>User Management</h3>
-              <p>Manage system users and permissions</p>
-              <Link to="/users" className="stat-link">Manage Users</Link> {/* Remove admin-link class */}
+            <div className="dashboard-card">
+              <div className="card-content">
+                <h3 className="card-title">Management</h3>
+                <p className="card-description">Manage system users and permissions</p>
+              </div>
+              <Link to="/users" className="card-button">Manual Uses</Link>
             </div>
 
-            <div className="stat-card"> {/* Remove admin-card class */}
-              <h3>System Reports</h3>
-              <p>View system analytics and reports</p>
-              <Link to="/reports" className="stat-link">View Reports</Link> {/* Remove admin-link class */}
+            <div className="dashboard-card">
+              <div className="card-content">
+                <h3 className="card-title">System Reports</h3>
+                <p className="card-description">View system analytics and reports</p>
+              </div>
+              <Link to="/reports" className="card-button">View Reports</Link>
+            </div>
+
+            <div className="dashboard-card">
+              <div className="card-content">
+                <h3 className="card-title">Settings</h3>
+                <p className="card-description">Configure system settings and preferences</p>
+              </div>
+              <Link to="/settings" className="card-button">Open Settings</Link>
             </div>
           </>
         )}
       </div>
 
-      <div className="user-info">
-        <h3>Your Information</h3>
-        <div className="info-grid">
-          <div><strong>Username:</strong> {username}</div>
-          <div><strong>Email:</strong> {email}</div>
-          <div><strong>Role:</strong>
+      <hr className="divider" />
+
+      <div className="user-info-section">
+        <h3 className="user-info-title">User Information</h3>
+        <div className="user-info-grid">
+          <div className="info-item">
+            <strong>Username:</strong> {username}
+          </div>
+          <div className="info-item">
+            <strong>Email:</strong> {email}
+          </div>
+          <div className="info-item">
+            <strong>Role:</strong>
             <span className={`role-badge ${userRole}`}>
               {userRole}
             </span>
           </div>
-          <div><strong>Name:</strong> {fullName}</div>
+          <div className="info-item">
+            <strong>Name:</strong> {fullName}
+          </div>
         </div>
       </div>
     </div>

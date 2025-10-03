@@ -62,6 +62,7 @@ export const authService = {
   register: (userData) => api.post('/auth/register/', userData),
   getProfile: () => api.get('/auth/profile/'),
   updateProfile: (userData) => api.put('/auth/profile/', userData),
+  changePassword: (passwordData) => api.post('/auth/change-password/', passwordData),
 };
 
 export const userService = {
@@ -100,4 +101,10 @@ export const mappingService = {
   create: (data) => api.post('/mappings/', data),
   delete: (id) => api.delete(`/mappings/${id}/`),
   getByPatient: (patientId) => api.get(`/mappings/patient/${patientId}/`),
+};
+
+export const systemService = {
+  getSettings: () => api.get('/system-settings/'),
+  updateSettings: (settings) => api.put('/system-settings/', settings),
+  getUserActivity: () => api.get('/user-activity/'),
 };

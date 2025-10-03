@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  backend:
+    build: ./healthcare_backend
+    container_name: healthcare_backend
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver"
+    volumes:
+      - ./healthcare_backend:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./healthcare_backend/.env
+    depends_on:
+      - db
+
+  frontend:
+    build: ./healthcare-frontend
+    container_name: healthcare_frontend
+    volumes:
+      - ./healthcare-frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+
+  db:
+    image: postgres:16
+    container_name: healthcare_db
+    environment:
+      POSTGRES_DB: healthcare_db
+      POSTGRES_USER: aditya
+      POSTGRES_PASSWORD: aditya123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

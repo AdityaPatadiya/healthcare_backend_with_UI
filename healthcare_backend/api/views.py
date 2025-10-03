@@ -182,17 +182,34 @@ class PatientDoctorMappingListCreateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        print(f"User: {request.user}, Role: {request.user.role}")  # Debug
+        print(f"Request data: {request.data}")  # Debug
+        
         if request.user.role != 'admin':
             return Response(
                 {"error": "Only administrators can create patient-doctor mappings"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        serializer = PatientDoctorMappingSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            serializer = PatientDoctorMappingSerializer(data=request.data)
+            print(f"Serializer data: {serializer.initial_data}")  # Debug
+            
+            if serializer.is_valid():
+                print("Serializer is valid")  # Debug
+                instance = serializer.save()
+                print(f"Instance created: {instance}")  # Debug
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                print(f"Serializer errors: {serializer.errors}")  # Debug
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            print(f"Exception occurred: {str(e)}")  # Debug
+            return Response(
+                {"error": f"Server error: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class PatientDoctorMappingDetailView(APIView):

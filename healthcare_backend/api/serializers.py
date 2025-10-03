@@ -72,7 +72,7 @@ class DoctorSerializer(serializers.ModelSerializer):
 class PatientDoctorMappingSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source='patient.name', read_only=True)
     doctor_name = serializers.CharField(source='doctor.name', read_only=True)
-    doctor_specilization = serializers.CharField(source='doctor.specialization', read_only=True)
+    doctor_specialization = serializers.CharField(source='doctor.specialization', read_only=True)
 
     class Meta:
         model = PatientDoctorMapping

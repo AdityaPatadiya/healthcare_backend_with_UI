@@ -53,4 +53,51 @@ api.interceptors.response.use(
   }
 );
 
+// Export the api instance
 export default api;
+
+// Service functions for different endpoints
+export const authService = {
+  login: (credentials) => api.post('/v1/auth/login/', credentials),
+  register: (userData) => api.post('/v1/auth/register/', userData),
+  getProfile: () => api.get('/v1/auth/profile/'),
+  updateProfile: (userData) => api.put('/v1/auth/profile/', userData),
+};
+
+export const userService = {
+  // Get all users (admin only)
+  getAllUsers: () => api.get('/users/'),
+  
+  // Get specific user (admin only)
+  getUser: (id) => api.get(`/users/${id}/`),
+  
+  // Update user (admin only)
+  updateUser: (id, userData) => api.put(`/users/${id}/`, userData),
+  
+  // Delete user (if you add this endpoint later)
+  deleteUser: (id) => api.delete(`/users/${id}/`),
+};
+
+export const patientService = {
+  getAll: () => api.get('/v1/patients/'),
+  getById: (id) => api.get(`/v1/patients/${id}/`),
+  create: (data) => api.post('/v1/patients/', data),
+  update: (id, data) => api.put(`/v1/patients/${id}/`, data),
+  delete: (id) => api.delete(`/v1/patients/${id}/`),
+};
+
+export const doctorService = {
+  getAll: () => api.get('/v1/doctors/'),
+  getById: (id) => api.get(`/v1/doctors/${id}/`),
+  create: (data) => api.post('/v1/doctors/', data),
+  update: (id, data) => api.put(`/v1/doctors/${id}/`, data),
+  delete: (id) => api.delete(`/v1/doctors/${id}/`),
+};
+
+export const mappingService = {
+  getAll: () => api.get('/v1/mappings/'),
+  getById: (id) => api.get(`/v1/mappings/${id}/`),
+  create: (data) => api.post('/v1/mappings/', data),
+  delete: (id) => api.delete(`/v1/mappings/${id}/`),
+  getByPatient: (patientId) => api.get(`/v1/mappings/patient/${patientId}/`),
+};

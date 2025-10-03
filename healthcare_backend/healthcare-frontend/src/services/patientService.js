@@ -1,8 +1,10 @@
 import api from './api';
 
 export const patientService = {
-  async getAll() {
-    const response = await api.get('/patients/');
+  async getAll(page = 1, search = '') {
+    const response = await api.get('/patients/', {
+      params: { page, search }
+    });
     return response.data;
   },
 

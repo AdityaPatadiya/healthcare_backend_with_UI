@@ -7,6 +7,8 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const isAdmin = user?.profile?.role === 'admin';
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -17,17 +19,26 @@ const Navbar = () => {
       <div className="navbar-brand">
         <Link to="/dashboard">Healthcare System</Link>
       </div>
-      
+
       <div className="navbar-menu">
         <Link to="/dashboard" className="navbar-item">Dashboard</Link>
         <Link to="/patients" className="navbar-item">Patients</Link>
         <Link to="/doctors" className="navbar-item">Doctors</Link>
         <Link to="/mappings" className="navbar-item">Mappings</Link>
+
+        {/* Admin-only links */}
+        {isAdmin && (
+          <>
+            <Link to="/users" className="navbar-item admin-only">Users</Link>
+            <Link to="/reports" className="navbar-item admin-only">Reports</Link>
+          </>
+        )}
       </div>
 
       <div className="navbar-user">
         <span>Welcome, {user?.username}</span>
-        {user?.profile?.role === 'admin' && <span className="admin-badge">Admin</span>}
+        {isAdmin && <span className="admin-badge">Admin</span>}
+        <span className="user-role">({user?.profile?.role})</span>
         <button onClick={handleLogout} className="logout-btn">Logout</button>
       </div>
     </nav>

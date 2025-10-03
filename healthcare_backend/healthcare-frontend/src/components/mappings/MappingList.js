@@ -45,6 +45,7 @@ const MappingList = () => {
     try {
       const response = await patientService.getAll();
       setPatients(response.data);
+      console.log('Patients data:', response.data); // Debug log
     } catch (err) {
       console.error('Error fetching patients:', err);
     }
@@ -54,6 +55,7 @@ const MappingList = () => {
     try {
       const response = await doctorService.getAll();
       setDoctors(response.data);
+      console.log('Doctors data:', response.data); // Debug log
     } catch (err) {
       console.error('Error fetching doctors:', err);
     }
@@ -97,19 +99,84 @@ const MappingList = () => {
     }
   };
 
-  // Get patient name by ID
+  // Get patient name by ID - UPDATED
   const getPatientName = (patientId) => {
     const patient = patients.find(p => p.id === patientId);
-    if (patient && patient.user) {
-      return `${patient.user.first_name || ''} ${patient.user.last_name || ''}`.trim() || patient.user.username || `Patient ${patientId}`;
+    if (!patient) {
+      return `Patient ${patientId}`;
     }
+    
+    // Try different possible structures
+    if (patient.user) {
+      // If patient has user object
+      const user = patient.user;
+      if (user.first_name && user.last_name) {
+        return `${user.first_name} ${user.last_name}`;
+      }
+      if (user.first_name) {
+        return user.first_name;
+      }
+      if (user.last_name) {
+        return user.last_name;
+      }
+      if (user.username) {
+        return user.username;
+      }
+    }
+    
+    // If patient has direct name fields
+    if (patient.first_name && patient.last_name) {
+      return `${patient.first_name} ${patient.last_name}`;
+    }
+    if (patient.first_name) {
+      return patient.first_name;
+    }
+    if (patient.last_name) {
+      return patient.last_name;
+    }
+    if (patient.name) {
+      return patient.name;
+    }
+    
+    // Fallback
     return `Patient ${patientId}`;
   };
 
-  // Get doctor name by ID
+  // Get doctor name by ID - UPDATED
   const getDoctorName = (doctorId) => {
     const doctor = doctors.find(d => d.id === doctorId);
-    return doctor ? doctor.name : `Doctor ${doctorId}`;
+    if (!doctor) {
+      return `Doctor ${doctorId}`;
+    }
+    
+    // Try different possible structures
+    if (doctor.name) {
+      return doctor.name;
+    }
+    if (doctor.first_name && doctor.last_name) {
+      return `${doctor.first_name} ${doctor.last_name}`;
+    }
+    if (doctor.first_name) {
+      return doctor.first_name;
+    }
+    if (doctor.last_name) {
+      return doctor.last_name;
+    }
+    
+    // Fallback
+    return `Doctor ${doctorId}`;
+  };
+
+  // Get patient options for dropdown
+  const getPatientOptions = () => {
+    return patients.map(patient => {
+      const name = getPatientName(patient.id);
+      return {
+        id: patient.id,
+        name: name,
+        display: name === `Patient ${patient.id}` ? `${name} (ID: ${patient.id})` : name
+      };
+    });
   };
 
   if (loading) {
@@ -156,12 +223,9 @@ const MappingList = () => {
                 required
               >
                 <option value="">Select Patient</option>
-                {patients.map(patient => (
+                {getPatientOptions().map(patient => (
                   <option key={patient.id} value={patient.id}>
-                    {patient.user ? 
-                      `${patient.user.first_name || ''} ${patient.user.last_name || ''}`.trim() || patient.user.username 
-                      : `Patient ${patient.id}`
-                    }
+                    {patient.display}
                   </option>
                 ))}
               </select>
@@ -178,7 +242,7 @@ const MappingList = () => {
                 <option value="">Select Doctor</option>
                 {doctors.map(doctor => (
                   <option key={doctor.id} value={doctor.id}>
-                    {doctor.name} ({doctor.specialization})
+                    {getDoctorName(doctor.id)} {doctor.specialization ? `(${doctor.specialization})` : ''}
                   </option>
                 ))}
               </select>
@@ -244,20 +308,23 @@ const MappingList = () => {
         )}
       </div>
 
-      {/* Information Card */}
-      <div className="mapping-info-card">
-        <h3>About Patient-Doctor Mappings</h3>
-        <div className="info-content">
-          <p>
-            <strong>For Administrators:</strong> You can create and manage relationships between patients and doctors. 
-            Each mapping represents which doctor is assigned to care for which patient.
-          </p>
-          <p>
-            <strong>For Regular Users:</strong> You can view the mappings for your own patients. 
-            This shows which doctors are assigned to care for your patients.
-          </p>
+      {/* Debug Information (remove in production) */}
+      {isAdmin && (
+        <div className="debug-info" style={{marginTop: '20px', padding: '10px', background: '#f5f5f5', borderRadius: '5px'}}>
+          <h4>Debug Information:</h4>
+          <p><strong>Patients count:</strong> {patients.length}</p>
+          <p><strong>Doctors count:</strong> {doctors.length}</p>
+          <p><strong>Mappings count:</strong> {mappings.length}</p>
+          <details>
+            <summary>Patients Data</summary>
+            <pre>{JSON.stringify(patients, null, 2)}</pre>
+          </details>
+          <details>
+            <summary>Doctors Data</summary>
+            <pre>{JSON.stringify(doctors, null, 2)}</pre>
+          </details>
         </div>
-      </div>
+      )}
     </div>
   );
 };

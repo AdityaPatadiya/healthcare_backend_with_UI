@@ -197,7 +197,7 @@ const DoctorList = () => {
               filteredDoctors.map(doctor => (
                 <div key={doctor.id} className="doctor-card">
                   <div className="doctor-info">
-                    <h3>Dr. {doctor.name}</h3>
+                    <h3>{doctor.name}</h3>
                     <p className="specialization">
                       <strong>Specialization:</strong> 
                       <span className="specialty-badge">{doctor.specialization}</span>

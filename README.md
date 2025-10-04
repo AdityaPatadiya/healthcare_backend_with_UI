@@ -1,142 +1,108 @@
-# healthcare_backend
+# Healthcare Backend API
 
-## APIs to be Implemented
+## Overview
+
+This project is a **Healthcare Management Backend API** built with Django REST Framework, PostgreSQL, Redis, and JWT authentication. It provides endpoints for:
+
+- Authentication (register, login, JWT refresh)
+- Patient management
+- Doctor management
+- Patient-Doctor mapping
+- User and system management
+
+---
+
+## APIs
 
 ### 1. Authentication APIs
-
-`POST /api/auth/register/` – Register a new user with name, email, and password.
-
-`POST /api/auth/login/` – Log in a user and return a JWT token.
+- `POST /api/v1/auth/register/` – Register a new user  
+- `POST /api/v1/auth/login/` – Login and get JWT token  
+- `POST /api/v1/auth/token/refresh/` – Refresh JWT token  
+- `GET /api/v1/auth/profile/` – Get authenticated user profile  
+- `POST /api/v1/auth/change-password/` – Change user password  
 
 ### 2. Patient Management APIs
-
-`POST /api/patients/` – Create a new patient (Authenticated users only).
-
-`GET /api/patients/` – Retrieve all patients created by the authenticated user.
-
-`GET /api/patients/<id>/` – Get details of a specific patient.
-
-`PUT /api/patients/<id>/` – Update patient details.
-
-`DELETE /api/patients/<id>/` – Delete a patient record.
+- `POST /api/v1/patients/` – Create a patient  
+- `GET /api/v1/patients/` – Retrieve all patients  
+- `GET /api/v1/patients/<id>/` – Get specific patient  
+- `PUT /api/v1/patients/<id>/` – Update patient  
+- `DELETE /api/v1/patients/<id>/` – Delete patient  
 
 ### 3. Doctor Management APIs
-
-`POST /api/doctors/` – Create a new doctor (Authenticated users only).
-
-`GET /api/doctors/` – Retrieve all doctors.
-
-`GET /api/doctors/<id>/` – Get details of a specific doctor.
-
-`PUT /api/doctors/<id>/` – Update doctor details.
-
-`DELETE /api/doctors/<id>/` – Delete a doctor record.
+- `POST /api/v1/doctors/` – Create a doctor  
+- `GET /api/v1/doctors/` – Retrieve all doctors  
+- `GET /api/v1/doctors/<id>/` – Get specific doctor  
+- `PUT /api/v1/doctors/<id>/` – Update doctor  
+- `DELETE /api/v1/doctors/<id>/` – Delete doctor  
 
 ### 4. Patient-Doctor Mapping APIs
-
-`POST /api/mappings/` – Assign a doctor to a patient.
-
-`GET /api/mappings/` – Retrieve all patient-doctor mappings.
-
-`GET /api/mappings/<patient_id>/` – Get all doctors assigned to a specific patient.
-
-`DELETE /api/mappings/<id>/` – Remove a doctor from a patient.
-
-### 5. Refresh Token API
-
-`POST /api/token/refresh` – Issue a new JWT token using the refresh token.
+- `POST /api/v1/mappings/` – Assign a doctor to a patient  
+- `GET /api/v1/mappings/` – Retrieve all mappings  
+- `GET /api/v1/mappings/patient/<patient_id>/` – Get all doctors for a patient  
+- `DELETE /api/v1/mappings/<id>/` – Remove doctor from patient  
 
 ---
 
-## Included Technologies
-1. Python RESTAPI
-2. postgresql
-3. redis-server
----
-
-## 🔧 How to Run the Project
-
-Follow these steps to set up and run the project:
-
-1. Clone the repo:
-
-    ```bash
-    git clone https://github.com/AdityaPatadiya/helthcare_backend.git
-    cd helthcare_backend
-    ```
-
-2. Create and activate a virtual environment:
-
-    ```bash
-    python -m venv venv
-    venv\Scripts\activate  # On Windows
-    # source venv/bin/activate  # On Linux/Mac
-    ```
-
-3. Install required libraries:
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4. Set up PostgreSQL:
-
-    - Create a PostgreSQL database and user.
-    - Start PostgreSQL:
-
-      ```bash
-      sudo service postgresql start
-      ```
-
-5. Generate a Django secret key:
-
-    ```bash
-    python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
-    ```
-
-6. Create and update `.env` file:
-
-    ```bash
-    cp .env.example .env
-    ```
-
-    Update the file with your credentials and secret key.
-
-7. Set required PostgreSQL permissions:
-
-    ```sql
-    GRANT ALL ON SCHEMA public TO <your_username>;
-    GRANT CREATE ON SCHEMA public TO <your_username>;
-    GRANT ALL PRIVILEGES ON SCHEMA public TO <your_username>;
-    ALTER DATABASE <your database> OWNER TO <your_username>;
-    ```
-
-8. Apply database migrations:
-
-    ```bash
-    python manage.py makemigrations
-    python manage.py migrate
-    ```
-
-9. Start Redis server:
-
-    ```bash
-    redis-server
-    ```
-
-10. Start the two required servers:
-
-    ```bash
-    # Run the Django server
-    python manage.py runserver
-
-    # Start the Celery worker
-    celery -A healthcare_backend worker --loglevel=INFO
-    ```
+## Technologies Used
+- Python 3.11  
+- Django REST Framework  
+- PostgreSQL 16  
+- Redis  
+- JWT Authentication  
+- Docker & Docker Compose  
 
 ---
 
-> [!WARNING]
-> While testing the endpoints, always include a trailing `/` in your URLs to avoid 301/404 issues.
+## Docker Setup
 
----
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/AdityaPatadiya/helthcare_backend.git
+cd helthcare_backend
+```
+
+### 2. Build and start Docker containers
+```bash
+docker-compose up --build
+```
+
+### 3. Create Superuser
+```bash
+docker-compose exec backend python manage.py createsuperuser
+```
+
+## Notes
+- All API endpoints require a trailing /
+
+- Backend URL for frontend container: http://backend:8000
+
+- Host machine backend URL: http://localhost:8000
+
+## Useful Docker Commands
+```bash
+# Start containers
+docker-compose up
+
+# Stop containers
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# Run shell inside backend container
+docker-compose exec backend sh
+```
+
+## Environment variaables
+```bash
+POSTGRES_DB=healthcare_db
+POSTGRES_USER=aditya
+POSTGRES_PASSWORD=aditya123
+DJANGO_SECRET_KEY=your_generated_secret_key
+```
+
+### Generate the Django secret key:
+```bash
+python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+```

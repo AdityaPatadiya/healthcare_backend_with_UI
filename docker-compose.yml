@@ -1,12 +1,12 @@
-version: '3.9'
-
 services:
   backend:
     build: ./healthcare_backend
     container_name: healthcare_backend
     command: >
-      sh -c "python manage.py makemigrations &&
+      sh -c "sleep 10 &&
+             python manage.py makemigrations --noinput &&
              python manage.py migrate &&
+             python setup_project.py &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./healthcare_backend:/app
@@ -16,6 +16,9 @@ services:
       - ./healthcare_backend/.env
     depends_on:
       - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
 
   frontend:
     build: ./healthcare-frontend
@@ -27,6 +30,10 @@ services:
       - "3000:3000"
     stdin_open: true
     tty: true
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - backend
 
   db:
     image: postgres:16
@@ -36,7 +43,7 @@ services:
       POSTGRES_USER: aditya
       POSTGRES_PASSWORD: aditya123
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

@@ -5,11 +5,15 @@ from .views import (
     DoctorListCreateView, DoctorDetailView,
     PatientDoctorMappingListCreateView, PatientDoctorMappingDetailView, 
     PatientDoctorByPatientView,
-    ChangePasswordView, SystemSettingsView, UserActivityView
+    ChangePasswordView, SystemSettingsView, UserActivityView,
+    DoctorSelfPatientsView, DoctorMapPatientView,
+    health_check
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
+    path('health/', health_check, name='health_check'),
+
     # Authentication
     path('v1/auth/register/', RegisterView.as_view(), name='register'),
     path('v1/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -36,4 +40,8 @@ urlpatterns = [
     path('v1/mappings/', PatientDoctorMappingListCreateView.as_view(), name='mapping-list-create'),
     path('v1/mappings/<int:pk>/', PatientDoctorMappingDetailView.as_view(), name='mapping-detail'),
     path('v1/mappings/patient/<int:patient_id>/', PatientDoctorByPatientView.as_view(), name='mapping-by-patient'),
+
+    # Add these to your urlpatterns
+    path('v1/doctor/my-patients/', DoctorSelfPatientsView.as_view(), name='doctor-my-patients'),
+    path('v1/doctor/map-patient/', DoctorMapPatientView.as_view(), name='doctor-map-patient'),
 ]

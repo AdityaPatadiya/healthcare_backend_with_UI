@@ -72,10 +72,30 @@ docker-compose up --build
 docker-compose exec backend python manage.py createsuperuser
 ```
 
+
+## Default Login Credentials
+
+After starting the application, you can use these default credentials:
+
+### Admin Panel (Django Admin)
+- **URL**: http://localhost:8000/admin/
+- **Username**: admin
+- **Password**: admin123
+- **Email**: admin@healthcare.com
+
+### Demo Users (Frontend)
+- **Doctor**: 
+  - Username: doctor
+  - Password: doctor123
+- **Patient**:
+  - Username: patient  
+  - Password: patient123
+
+
 ## Notes
 - All API endpoints require a trailing /
 
-- Backend URL for frontend container: http://backend:8000
+- Backend URL for frontend container: http://backend:3000
 
 - Host machine backend URL: http://localhost:8000
 

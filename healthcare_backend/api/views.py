@@ -3,13 +3,21 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import api_view
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from .models import Patient, Doctor, PatientDoctorMapping, CustomUser
 from .serializers import PatientSerializer, RegisterSerializer, DoctorSerializer, PatientDoctorMappingSerializer, UserSerializer
 from .premissions import IsAdmin, IsOwnerOrAdmin, IsCreatorOrAdmin
-from .tasks import send_welcome_email
 from django.contrib.auth import update_session_auth_hash
+
+
+@api_view(['GET'])
+def health_check(request):
+    """
+    Health check endpoint for Docker
+    """
+    return Response({"status": "healthy", "service": "healthcare_backend"}, status=status.HTTP_200_OK)
 
 
 class RegisterView(APIView):
@@ -19,7 +27,6 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            send_welcome_email.delay(user.email)
             refresh = RefreshToken.for_user(user)
             return Response({
                 'refresh': str(refresh),
@@ -177,36 +184,51 @@ class PatientDoctorMappingListCreateView(APIView):
     def get(self, request):
         if request.user.role == 'admin':
             mappings = PatientDoctorMapping.objects.all()
+        elif request.user.role == 'doctor':
+            mappings = PatientDoctorMapping.objects.filter(doctor__user=request.user)
         else:
             mappings = PatientDoctorMapping.objects.filter(patient__user=request.user)
+        
         serializer = PatientDoctorMappingSerializer(mappings, many=True)
         return Response(serializer.data)
 
     def post(self, request):
-        print(f"User: {request.user}, Role: {request.user.role}")  # Debug
-        print(f"Request data: {request.data}")  # Debug
-        
-        if request.user.role != 'admin':
+        print(f"User: {request.user}, Role: {request.user.role}")
+        print(f"Request data: {request.data}")
+
+        # Allow both admins and doctors to create mappings
+        if request.user.role not in ['admin', 'doctor']:
             return Response(
-                {"error": "Only administrators can create patient-doctor mappings"},
+                {"error": "Only administrators and doctors can create patient-doctor mappings"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
         try:
             serializer = PatientDoctorMappingSerializer(data=request.data)
-            print(f"Serializer data: {serializer.initial_data}")  # Debug
+            print(f"Serializer data: {serializer.initial_data}")
             
             if serializer.is_valid():
-                print("Serializer is valid")  # Debug
+                print("Serializer is valid")
+                
+                if request.user.role == 'doctor':
+                    try:
+                        doctor_profile = Doctor.objects.get(user=request.user)
+                        serializer.validated_data['doctor'] = doctor_profile
+                    except Doctor.DoesNotExist:
+                        return Response(
+                            {"error": "Doctor profile not found for current user"},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                
                 instance = serializer.save()
-                print(f"Instance created: {instance}")  # Debug
+                print(f"Instance created: {instance}")
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
-                print(f"Serializer errors: {serializer.errors}")  # Debug
+                print(f"Serializer errors: {serializer.errors}")
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            print(f"Exception occurred: {str(e)}")  # Debug
+            print(f"Exception occurred: {str(e)}")
             return Response(
                 {"error": f"Server error: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -246,6 +268,84 @@ class PatientDoctorMappingDetailView(APIView):
 
         mapping.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class DoctorSelfPatientsView(APIView):
+    """Get all patients mapped to the current doctor"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'doctor':
+            return Response(
+                {"error": "Only doctors can access this endpoint"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            doctor_profile = Doctor.objects.get(user=request.user)
+            mappings = PatientDoctorMapping.objects.filter(doctor=doctor_profile)
+            patients = [mapping.patient for mapping in mappings]
+            
+            serializer = PatientSerializer(patients, many=True)
+            return Response(serializer.data)
+        except Doctor.DoesNotExist:
+            return Response(
+                {"error": "Doctor profile not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class DoctorMapPatientView(APIView):
+    """Allow doctors to map patients to themselves"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'doctor':
+            return Response(
+                {"error": "Only doctors can map patients to themselves"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        patient_id = request.data.get('patient_id')
+        if not patient_id:
+            return Response(
+                {"error": "patient_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Get the doctor profile
+            doctor_profile = Doctor.objects.get(user=request.user)
+            
+            # Get the patient
+            patient = Patient.objects.get(id=patient_id)
+            
+            # Check if mapping already exists
+            if PatientDoctorMapping.objects.filter(patient=patient, doctor=doctor_profile).exists():
+                return Response(
+                    {"error": "This patient is already mapped to you"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Create the mapping
+            mapping = PatientDoctorMapping.objects.create(
+                patient=patient,
+                doctor=doctor_profile
+            )
+            
+            serializer = PatientDoctorMappingSerializer(mapping)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Doctor.DoesNotExist:
+            return Response(
+                {"error": "Doctor profile not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Patient.DoesNotExist:
+            return Response(
+                {"error": "Patient not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class PatientDoctorByPatientView(APIView):

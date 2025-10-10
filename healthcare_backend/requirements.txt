@@ -4,9 +4,8 @@ celery
 python-telegram-bot
 djangorestframework-simplejwt
 python-decouple
-django-celery-results
 psycopg2-binary
 redis
 python-dotenv
-asgiref
 django-cors-headers
+pillow

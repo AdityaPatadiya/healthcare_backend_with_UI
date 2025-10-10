@@ -1,0 +1,9 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "cd healthcare_backend && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn healthcare_backend.wsgi:application --bind 0.0.0.0:$PORT"
+
+[healthcheck]
+path = "/api/health/"
+timeout = 300

@@ -9,3 +9,6 @@ redis
 python-dotenv
 django-cors-headers
 pillow
+gunicorn
+whitenoise
+dj-database-url

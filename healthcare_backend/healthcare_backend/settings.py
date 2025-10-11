@@ -90,7 +90,7 @@ WSGI_APPLICATION = 'healthcare_backend.wsgi.application'
 # Use dj-database-url for production (Railway provides DATABASE_URL)
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', 'postgresql://aditya:aditya123@localhost:5432/healthcare_db'),
+        default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
         conn_health_checks=True,
     )

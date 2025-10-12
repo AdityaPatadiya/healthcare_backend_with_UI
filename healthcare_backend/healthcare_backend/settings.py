@@ -17,7 +17,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-secret-key-f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['*']  # For production, you might want to specify your domain
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'backend', '0.0.0.0'] # For production, you might want to specify your domain
 
 # Application definition
 INSTALLED_APPS = [
@@ -89,11 +89,14 @@ WSGI_APPLICATION = 'healthcare_backend.wsgi.application'
 # Database
 # Use dj-database-url for production (Railway provides DATABASE_URL)
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'healthcare_db'),
+        'USER': os.environ.get('DB_USER', 'aditya'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'aditya123'),
+        'HOST': os.environ.get('DB_HOST', 'db'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+    }
 }
 
 # REST Framework configuration

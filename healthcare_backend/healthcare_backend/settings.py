@@ -163,10 +163,8 @@ if not DEBUG:
     
     # Additional production settings
     ALLOWED_HOSTS = [
-        'your-railway-domain.up.railway.app',
         'localhost',
         '127.0.0.1',
-        # Add your custom domain here when you have one
     ]
     
     # More specific CORS settings for production

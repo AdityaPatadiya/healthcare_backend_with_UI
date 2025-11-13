@@ -24,31 +24,151 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        print("=== REGISTRATION REQUEST DATA ===")
+        print(f"Raw data: {request.data}")
+        print("=================================")
+        
         serializer = RegisterSerializer(data=request.data)
+        
         if serializer.is_valid():
-            user = serializer.save()
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'user': UserSerializer(user).data
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            print("Serializer is valid")
+            role = request.data.get('role', 'user')
+            print(f"Creating user with role: {role}")
+            
+            try:
+                user = serializer.save()
+                user.role = role
+                
+                # For doctors, set is_active to False until approved by admin
+                if role == 'doctor':
+                    user.is_active = False
+                
+                user.save()
+                print(f"User created: {user.username}, role: {user.role}")
+
+                # Create role-specific profile
+                if role == 'patient':
+                    patient = Patient.objects.create(
+                        user=user,
+                        full_name=request.data.get('full_name', f"{user.first_name} {user.last_name}"),
+                        email=user.email,
+                        age=request.data.get('age', 0),
+                        gender=request.data.get('gender', 'Other'),
+                        contact_number=request.data.get('contact_number', ''),
+                        medical_history=request.data.get('medical_history', '')
+                    )
+                    print(f"Patient profile created: {patient}")
+                    
+                elif role == 'doctor':
+                    doctor = Doctor.objects.create(
+                        user=user,
+                        full_name=request.data.get('full_name', f"{user.first_name} {user.last_name}"),
+                        email=user.email,
+                        specializations=request.data.get('specializations', []),
+                        license_number=request.data.get('license_number', ''),
+                        years_of_experience=request.data.get('years_of_experience', 0),
+                        contact_number=request.data.get('contact_number', ''),
+                        is_approved=False,
+                        created_by=user
+                    )
+                    print(f"Doctor profile created: {doctor}")
+
+                refresh = RefreshToken.for_user(user)
+                return Response({
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                    'user': UserSerializer(user).data,
+                    'message': 'Registration successful. ' + 
+                              ('Your account is pending admin approval.' if role == 'doctor' else '')
+                }, status=status.HTTP_201_CREATED)
+                
+            except Exception as e:
+                print(f"Error during user creation: {str(e)}")
+                return Response(
+                    {"error": f"User creation failed: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        else:
+            print("=== SERIALIZER ERRORS ===")
+            print(f"Errors: {serializer.errors}")
+            print("=========================")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        from django.contrib.auth import authenticate
+        
+        email = request.data.get('email')
+        password = request.data.get('password')
+        
+        if not email or not password:
+            return Response(
+                {"error": "Email and password are required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            user = CustomUser.objects.get(email=email)
+            user = authenticate(username=user.username, password=password)
+            
+            if user is not None:
+                # Check if doctor is approved
+                if user.role == 'doctor':
+                    try:
+                        doctor = Doctor.objects.get(user=user)
+                        if not doctor.is_approved:
+                            return Response(
+                                {"error": "Your account is pending admin approval"},
+                                status=status.HTTP_403_FORBIDDEN
+                            )
+                    except Doctor.DoesNotExist:
+                        pass
+                
+                refresh = RefreshToken.for_user(user)
+                return Response({
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                    'user': UserSerializer(user).data
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"error": "Invalid credentials"}, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+                
+        except CustomUser.DoesNotExist:
+            return Response(
+                {"error": "Invalid credentials"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
-    
-    def put(self, request):
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user_data = UserSerializer(request.user).data
+
+        # Include role-specific data
+        if request.user.role == 'patient':
+            try:
+                patient = Patient.objects.get(user=request.user)
+                user_data['profile'] = PatientSerializer(patient).data
+            except Patient.DoesNotExist:
+                user_data['profile'] = None
+        elif request.user.role == 'doctor':
+            try:
+                doctor = Doctor.objects.get(user=request.user)
+                user_data['profile'] = DoctorSerializer(doctor).data
+            except Doctor.DoesNotExist:
+                user_data['profile'] = None
+        else:
+            user_data['profile'] = None
+
+        return Response(user_data)
 
 
 class PatientListCreateView(APIView):
@@ -114,7 +234,12 @@ class DoctorListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        doctors = Doctor.objects.all()  # this is the concept of ORM.
+        if request.user.role == 'admin':
+            doctors = Doctor.objects.all()
+        else:
+            # Only show approved doctors to non-admin users
+            doctors = Doctor.objects.filter(is_approved=True)
+
         serializer = DoctorSerializer(doctors, many=True)
         return Response(serializer.data)
 
@@ -136,7 +261,11 @@ class DoctorDetailView(APIView):
 
     def get_object(self, pk):
         try:
-            return Doctor.objects.get(pk=pk)
+            doctor = Doctor.objects.get(pk=pk)
+            # Non-admin users can only see approved doctors
+            if not doctor.is_approved and self.request.user.role != 'admin':
+                return None
+            return doctor
         except Doctor.DoesNotExist:
             return None
 
@@ -176,6 +305,52 @@ class DoctorDetailView(APIView):
             )
         doctor.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class DoctorApprovalView(APIView):
+    """Admin endpoint to approve/reject doctors"""
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request, doctor_id):
+        try:
+            doctor = Doctor.objects.get(id=doctor_id)
+            is_approved = request.data.get('is_approved')
+            
+            if is_approved is None:
+                return Response(
+                    {"error": "is_approved field is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            doctor.is_approved = is_approved
+            doctor.save()
+            
+            # Activate/deactivate user account
+            if doctor.user:
+                doctor.user.is_active = is_approved
+                doctor.user.save()
+            
+            action = "approved" if is_approved else "rejected"
+            return Response(
+                {"message": f"Doctor {action} successfully"},
+                status=status.HTTP_200_OK
+            )
+            
+        except Doctor.DoesNotExist:
+            return Response(
+                {"error": "Doctor not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class PendingDoctorsView(APIView):
+    """Get all pending doctor approvals"""
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        pending_doctors = Doctor.objects.filter(is_approved=False)
+        serializer = DoctorSerializer(pending_doctors, many=True)
+        return Response(serializer.data)
 
 
 class PatientDoctorMappingListCreateView(APIView):
@@ -359,8 +534,8 @@ class PatientDoctorByPatientView(APIView):
                     {"error": "You can only view mappings for your own patients"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            
-            mappings = PatientDoctorMapping.objects.filder(patient_id=patient_id)
+
+            mappings = PatientDoctorMapping.objects.filter(patient_id=patient_id)
             serializer = PatientDoctorMappingSerializer(mappings, many=True)
             return Response(serializer.data)
 

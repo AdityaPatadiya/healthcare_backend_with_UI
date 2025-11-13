@@ -12,14 +12,36 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'user', 'age', 'gender', 'created_at')
+    list_display = ('full_name', 'user', 'email', 'age', 'gender', 'contact_number', 'created_at')
     list_filter = ('gender', 'created_at')
-    search_fields = ('name', 'user__username')
+    search_fields = ('full_name', 'user__username', 'email')
 
 @admin.register(Doctor)
 class DoctorAdmin(admin.ModelAdmin):
-    list_display = ('name', 'specialization', 'contact', 'email')
-    search_fields = ('name', 'specialization', 'email')
+    list_display = ('full_name', 'email', 'license_number', 'years_of_experience', 'is_approved', 'created_at')
+    list_filter = ('is_approved', 'created_at')
+    search_fields = ('full_name', 'email', 'license_number')
+    actions = ['approve_doctors', 'reject_doctors']
+    
+    def approve_doctors(self, request, queryset):
+        updated = queryset.update(is_approved=True)
+        # Also activate user accounts
+        for doctor in queryset:
+            if doctor.user:
+                doctor.user.is_active = True
+                doctor.user.save()
+        self.message_user(request, f"{updated} doctors were approved.")
+    approve_doctors.short_description = "Approve selected doctors"
+    
+    def reject_doctors(self, request, queryset):
+        updated = queryset.update(is_approved=False)
+        # Also deactivate user accounts
+        for doctor in queryset:
+            if doctor.user:
+                doctor.user.is_active = False
+                doctor.user.save()
+        self.message_user(request, f"{updated} doctors were rejected.")
+    reject_doctors.short_description = "Reject selected doctors"
 
 @admin.register(PatientDoctorMapping)
 class PatientDoctorMappingAdmin(admin.ModelAdmin):

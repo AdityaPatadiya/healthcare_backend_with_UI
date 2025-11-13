@@ -6,7 +6,6 @@ services:
       sh -c "sleep 10 &&
              python manage.py makemigrations --noinput &&
              python manage.py migrate &&
-             python setup_project.py &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./healthcare_backend:/app
@@ -19,21 +18,28 @@ services:
     environment:
       - DB_HOST=db
       - DB_PORT=5432
+    networks:
+      - healthcare-network
 
   frontend:
-    build: ./healthcare-frontend
+    build:
+      context: ./healthcare-frontend/NeuroMed-2f
+      dockerfile: Dockerfile
     container_name: healthcare_frontend
+    working_dir: /app
     volumes:
-      - ./healthcare-frontend:/app
+      - ./healthcare-frontend/NeuroMed-2f:/app
       - /app/node_modules
     ports:
       - "3000:3000"
     stdin_open: true
     tty: true
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
       - backend
+    networks:
+      - healthcare-network
 
   db:
     image: postgres:16
@@ -46,6 +52,13 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - healthcare-network
 
 volumes:
   postgres_data:
+
+networks:
+  healthcare-network:
+    driver: bridge
+

@@ -9,6 +9,32 @@ from api.models import Doctor, Patient, PatientDoctorMapping
 
 User = get_user_model()
 
+def create_patient_profile(user, patient_data):
+    """Create patient profile with new fields"""
+    return Patient.objects.create(
+        user=user,
+        full_name=patient_data.get('full_name', user.get_full_name() or user.username),
+        email=patient_data.get('email', user.email),
+        age=patient_data.get('age', 0),
+        gender=patient_data.get('gender', 'Other'),
+        contact_number=patient_data.get('contact_number', ''),
+        medical_history=patient_data.get('medical_history', '')
+    )
+
+def create_doctor_profile(user, doctor_data, created_by):
+    """Create doctor profile with new fields"""
+    return Doctor.objects.create(
+        user=user,
+        full_name=doctor_data.get('full_name', user.get_full_name() or user.username),
+        email=doctor_data.get('email', user.email),
+        specializations=doctor_data.get('specializations', []),
+        license_number=doctor_data.get('license_number', ''),
+        years_of_experience=doctor_data.get('years_of_experience', 0),
+        contact_number=doctor_data.get('contact_number', ''),
+        is_approved=doctor_data.get('is_approved', True),
+        created_by=created_by
+    )
+
 def setup_project():
     print("🚀 Setting up healthcare system...")
     
@@ -19,7 +45,7 @@ def setup_project():
             'email': 'admin@healthcare.com',
             'is_staff': True,
             'is_superuser': True,
-            'role': 'admin'  # Explicitly set role to admin
+            'role': 'admin'
         }
     )
     
@@ -32,7 +58,7 @@ def setup_project():
         admin_user.role = 'admin'
         admin_user.is_staff = True
         admin_user.is_superuser = True
-        admin_user.set_password('admin123')  # Ensure password is set
+        admin_user.set_password('admin123')
         admin_user.save()
         print("✅ Existing admin user updated:")
     
@@ -51,13 +77,18 @@ def setup_project():
             last_name='Doctor',
             role='doctor'
         )
-        # Create doctor profile WITHOUT user field for now
-        doctor_profile = Doctor.objects.create(
-            name='Dr. John Doctor',
-            specialization='Cardiology',
-            contact='1234567890',
-            email='doctor@healthcare.com',
-            created_by=admin_user
+        # Create doctor profile with new fields
+        doctor_profile = create_doctor_profile(
+            doctor_user,
+            {
+                'full_name': 'Dr. John Doctor',
+                'specializations': ['Cardiology'],
+                'license_number': 'CARD123456',
+                'years_of_experience': 10,
+                'contact_number': '1234567890',
+                'is_approved': True
+            },
+            admin_user
         )
         print("✅ Demo doctor user and profile created:")
         print("   Username: doctor")
@@ -66,7 +97,6 @@ def setup_project():
         print("   Contact: 1234567890")
     else:
         doctor_user = User.objects.get(username='doctor')
-        # Ensure doctor role is set
         if doctor_user.role != 'doctor':
             doctor_user.role = 'doctor'
             doctor_user.save()
@@ -84,14 +114,16 @@ def setup_project():
             last_name='Patient',
             role='patient'
         )
-        # Create patient profile
-        patient_profile = Patient.objects.create(
-            user=patient_user,
-            name='Alice Patient',
-            age=30,
-            gender='Female',
-            address='123 Main Street, City, State',
-            condition='Regular checkup required'
+        # Create patient profile with new fields
+        patient_profile = create_patient_profile(
+            patient_user,
+            {
+                'full_name': 'Alice Patient',
+                'age': 30,
+                'gender': 'Female',
+                'contact_number': '9876543210',
+                'medical_history': 'Regular checkup required'
+            }
         )
         print("✅ Demo patient user and profile created:")
         print("   Username: patient")
@@ -99,7 +131,6 @@ def setup_project():
         print("   Condition: Regular checkup required")
     else:
         patient_user = User.objects.get(username='patient')
-        # Ensure patient role is set
         if patient_user.role != 'patient':
             patient_user.role = 'patient'
             patient_user.save()
@@ -109,18 +140,16 @@ def setup_project():
 
     # Create sample patient-doctor mapping
     try:
-        # Get the doctor and patient profiles
         doctor_profile = Doctor.objects.get(email='doctor@healthcare.com')
         patient_profile = Patient.objects.get(user=patient_user)
         
-        # Check if mapping already exists
         if not PatientDoctorMapping.objects.filter(patient=patient_profile, doctor=doctor_profile).exists():
             mapping = PatientDoctorMapping.objects.create(
                 patient=patient_profile,
                 doctor=doctor_profile
             )
             print("✅ Patient-Doctor mapping created:")
-            print(f"   {patient_profile.name} → {doctor_profile.name}")
+            print(f"   {patient_profile.full_name} → {doctor_profile.full_name}")
         else:
             print("ℹ️  Patient-Doctor mapping already exists")
             
@@ -129,13 +158,13 @@ def setup_project():
 
     # Create additional demo doctors with different specializations
     specializations = [
-        ('Neurology', 'Dr. Sarah Neuro', 'neurologist@healthcare.com', '1112223333'),
-        ('Pediatrics', 'Dr. Mike Child', 'pediatrician@healthcare.com', '4445556666'),
-        ('Orthopedics', 'Dr. David Bone', 'orthopedic@healthcare.com', '7778889999'),
-        ('Dermatology', 'Dr. Emily Skin', 'dermatologist@healthcare.com', '0001112222')
+        ('Neurology', 'Dr. Sarah Neuro', 'neurologist@healthcare.com', '1112223333', 'NEURO123456', 8),
+        ('Pediatrics', 'Dr. Mike Child', 'pediatrician@healthcare.com', '4445556666', 'PEDIA123456', 12),
+        ('Orthopedics', 'Dr. David Bone', 'orthopedic@healthcare.com', '7778889999', 'ORTHO123456', 15),
+        ('Dermatology', 'Dr. Emily Skin', 'dermatologist@healthcare.com', '0001112222', 'DERMA123456', 7)
     ]
 
-    for specialization, name, email, contact in specializations:
+    for specialization, name, email, contact, license_num, exp_years in specializations:
         username = specialization.lower()
         user, created = User.objects.get_or_create(
             username=username,
@@ -151,12 +180,16 @@ def setup_project():
         if created:
             user.set_password(f'{username}123')
             user.save()
-            # Create doctor profile WITHOUT user field for now
+            # Create doctor profile with new fields
             Doctor.objects.create(
-                name=name,
-                specialization=specialization,
-                contact=contact,
+                user=user,
+                full_name=name,
                 email=email,
+                specializations=[specialization],
+                license_number=license_num,
+                years_of_experience=exp_years,
+                contact_number=contact,
+                is_approved=True,
                 created_by=admin_user
             )
             print(f"✅ {specialization} doctor created:")
@@ -164,7 +197,6 @@ def setup_project():
             print(f"   Password: {username}123")
             print(f"   Specialization: {specialization}")
         else:
-            # Update existing user role if needed
             if user.role != 'doctor':
                 user.role = 'doctor'
                 user.save()
@@ -172,16 +204,16 @@ def setup_project():
 
     # Create additional demo patients
     demo_patients = [
-        ('Bob Smith', 45, 'Male', '456 Oak Avenue, City, State', 'Hypertension', 'bob'),
-        ('Carol Johnson', 28, 'Female', '789 Pine Road, City, State', 'Diabetes management', 'carol'),
-        ('David Wilson', 60, 'Male', '321 Elm Street, City, State', 'Arthritis treatment', 'david')
+        ('Bob Smith', 'bob@healthcare.com', 45, 'Male', '456 Oak Avenue, City, State', 'Hypertension', '9876543211', 'bob'),
+        ('Carol Johnson', 'carol@healthcare.com', 28, 'Female', '789 Pine Road, City, State', 'Diabetes management', '9876543212', 'carol'),
+        ('David Wilson', 'david@healthcare.com', 60, 'Male', '321 Elm Street, City, State', 'Arthritis treatment', '9876543213', 'david')
     ]
 
-    for name, age, gender, address, condition, username in demo_patients:
+    for name, email, age, gender, address, condition, contact, username in demo_patients:
         user, created = User.objects.get_or_create(
             username=username,
             defaults={
-                'email': f'{username}@healthcare.com',
+                'email': email,
                 'password': f'{username}123',
                 'first_name': name.split()[0],
                 'last_name': name.split()[1],
@@ -192,21 +224,21 @@ def setup_project():
         if created:
             user.set_password(f'{username}123')
             user.save()
-            # Create patient profile
+            # Create patient profile with new fields
             Patient.objects.create(
                 user=user,
-                name=name,
+                full_name=name,
+                email=email,
                 age=age,
                 gender=gender,
-                address=address,
-                condition=condition
+                contact_number=contact,
+                medical_history=condition
             )
             print(f"✅ Demo patient created:")
             print(f"   Username: {username}")
             print(f"   Password: {username}123")
             print(f"   Condition: {condition}")
         else:
-            # Update existing user role if needed
             if user.role != 'patient':
                 user.role = 'patient'
                 user.save()

@@ -23,12 +23,12 @@ class CustomUserManager(BaseUserManager):
         return user
 
 
-
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ('admin', 'Admin'),
         ('user', 'User'),
-        ('admin', 'Admin')
+        ('doctor', 'Doctor'),
+        ('patient', 'Patient')
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
 
@@ -58,19 +58,38 @@ class CustomUser(AbstractUser):
 
 
 class Patient(models.Model):
+    GENDER_CHOICES = (
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+        ('Other', 'Other')
+    )
+
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    age = models.IntegerField()
-    gender = models.CharField(max_length=10)
-    address = models.TextField()
+    full_name = models.CharField(max_length=100, default='')
+    email = models.EmailField(blank=True, null=True)
+    age = models.IntegerField(default=0)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='Other')
+    contact_number = models.CharField(max_length=15, default='')
+    medical_history = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    condition = models.TextField()
 
     def __str__(self):
-        return self.name
+        return self.full_name
 
 
 class Doctor(models.Model):
+    SPECIALIZATION_CHOICES = (
+        ('Cardiology', 'Cardiology'),
+        ('Dermatology', 'Dermatology'),
+        ('Pediatrics', 'Pediatrics'),
+        ('Neurology', 'Neurology'),
+        ('Orthopedics', 'Orthopedics'),
+        ('Psychiatry', 'Psychiatry'),
+        ('General Practice', 'General Practice'),
+        ('Dentistry', 'Dentistry'),
+        ('Surgery', 'Surgery'),
+        ('Radiology', 'Radiology'),
+    )
     user = models.OneToOneField(
         CustomUser, 
         on_delete=models.CASCADE, 
@@ -78,10 +97,13 @@ class Doctor(models.Model):
         blank=True, 
         related_name='doctor_profile'
     )
-    name = models.CharField(max_length=100)
-    specialization = models.CharField(max_length=100)
-    contact = models.CharField(max_length=15)
+    full_name = models.CharField(max_length=100, default='')
     email = models.EmailField(unique=True)
+    specializations = models.JSONField(default=list)  # Store as list of strings
+    license_number = models.CharField(max_length=50, blank=True, default='')
+    years_of_experience = models.IntegerField(default=0)
+    contact_number = models.CharField(max_length=15, default='')
+    is_approved = models.BooleanField(default=False)  # Admin approval required
     created_by = models.ForeignKey(
         CustomUser, 
         on_delete=models.CASCADE, 
@@ -89,9 +111,10 @@ class Doctor(models.Model):
         blank=True, 
         related_name='created_doctors'
     )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.specialization})"
+        return f"{self.full_name} ({', '.join(self.specializations)})"
 
 
 class PatientDoctorMapping(models.Model):
@@ -105,4 +128,4 @@ class PatientDoctorMapping(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.patient.name} - {self.doctor.name}"
+        return f"{self.patient.full_name} - {self.doctor.full_name}"

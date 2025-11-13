@@ -155,9 +155,9 @@ SIMPLE_JWT = {
 # Security settings for production
 if not DEBUG:
     # Security settings
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_HSTS_SECONDS = 31536000  # 1 year
@@ -171,9 +171,9 @@ if not DEBUG:
     ]
     
     # More specific CORS settings for production
-    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOW_ALL_ORIGINS = True
     CORS_ALLOWED_ORIGINS = [
-        "https://your-vercel-app.vercel.app",
+        "http://your-vercel-app.vercel.app",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]
